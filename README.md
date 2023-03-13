@@ -1,1 +1,1 @@
-# slack-shortcut-test
+# slack-shortcuts-test
