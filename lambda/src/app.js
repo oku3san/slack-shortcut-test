@@ -1,4 +1,4 @@
-const { App, AwsLambdaReceiver } = require('@slack/bolt');
+const { App, AwsLambdaReceiver, LogLevel } = require('@slack/bolt');
 
 // Initialize your custom receiver
 const awsLambdaReceiver = new AwsLambdaReceiver({
@@ -9,6 +9,7 @@ const awsLambdaReceiver = new AwsLambdaReceiver({
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   receiver: awsLambdaReceiver,
+  logLevel: LogLevel.DEBUG,
 });
 
 
@@ -64,7 +65,7 @@ const view = {
   ]
 }
 
-app.shortcut('slack-shortcut-test-callback', async ({ shortcut, ack, context }) => {
+app.shortcut('up', async ({ shortcut, ack, context }) => {
   await ack();
 
   try {
