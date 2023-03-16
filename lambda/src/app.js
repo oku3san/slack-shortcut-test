@@ -9,54 +9,90 @@ const awsLambdaReceiver = new AwsLambdaReceiver({
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   receiver: awsLambdaReceiver,
-
-  // When using the AwsLambdaReceiver, processBeforeResponse can be omitted.
-  // If you use other Receivers, such as ExpressReceiver for OAuth flow support
-  // then processBeforeResponse: true is required. This option will defer sending back
-  // the acknowledgement until after your handler has run to ensure your function
-  // isn't terminated early by responding to the HTTP request that triggered it.
-
-  // processBeforeResponse: true
 });
 
-// Listens to incoming messages that contain "hello"
-app.message('hello', async ({ message, say }) => {
-  // say() sends a message to the channel where the event was triggered
-  await say({
-    blocks: [
-      {
-        "type": "section",
-        "text": {
-          "type": "mrkdwn",
-          "text": `Hey there <@${message.user}>!`
+
+const options = [
+  {
+    text: {
+      type: 'plain_text',
+      text: 'オプション1',
+    },
+    value: 'value1',
+  },
+  {
+    text: {
+      type: 'plain_text',
+      text: 'オプション2',
+    },
+    value: 'value2',
+  },
+];
+
+// セレクトボックスを表示する
+const view = {
+  type: "modal",
+  title: {
+    type: "plain_text",
+    text: "あげる",
+  },
+  submit: {
+    type: "plain_text",
+    text: "Submit",
+  },
+  close: {
+    type: "plain_text",
+    text: "Cancel",
+  },
+  blocks: [
+    {
+      type: "input",
+      element: {
+        type: "static_select",
+        placeholder: {
+          type: "plain_text",
+          text: "起動対象を選択してください",
         },
-        "accessory": {
-          "type": "button",
-          "text": {
-            "type": "plain_text",
-            "text": "Click Me"
-          },
-          "action_id": "button_click"
-        }
+        options: options,
+        action_id: "button_click",
+      },
+      label: {
+        type: "plain_text",
+        text: "起動対象を選択してください",
       }
-    ],
-    text: `Hey there <@${message.user}>!`
-  });
-});
+    }
+  ]
+}
 
-// Listens for an action from a button click
-app.action('button_click', async ({ body, ack, say }) => {
+app.shortcut('slack-shortcut-test-callback', async ({ shortcut, ack, context }) => {
   await ack();
 
-  await say(`<@${body.user.id}> clicked the button`);
+  try {
+    const result = await app.client.views.open({
+      token: context.botToken,
+      trigger_id: shortcut.trigger_id,
+      view: view,
+    });
+    console.log(result);
+  } catch (e) {
+    console.log(e);
+    app.error(e);
+  }
+});
+
+app.action('button_click', async ({ ack, body, context }) => {
+  await ack();
+
+  try {
+    const selectedOption = body.actions[0].selected_option;
+    console.log(selectedOption.value);
+  } catch (e) {
+    console.log(e);
+    app.error(e);
+  }
 });
 
 // Listens to incoming messages that contain "goodbye"
-app.message('goodbye', async ({ message, say }) => {
-  // say() sends a message to the channel where the event was triggered
-  await say(`See ya later, <@${message.user}> :wave:`);
-});
-
 // Handle the Lambda function event
 module.exports.handler = async (event, context, callback) => {
   const handler = await awsLambdaReceiver.start();
