@@ -35,7 +35,7 @@ const view = {
   ],
 };
 
-app.shortcut('up', async ({ shortcut, ack, context, client }) => {
+const handleShortcut = async ({ shortcut, ack, context, client }) => {
   try {
     await ack();
     await client.views.open({
@@ -47,9 +47,9 @@ app.shortcut('up', async ({ shortcut, ack, context, client }) => {
     console.error(error);
     app.error(error);
   }
-});
+};
 
-app.view('submit', async ({ ack, body, context, client, view }) => {
+const handleViewSubmit = async ({ ack, body, context, client, view }) => {
   try {
     await ack();
     const value = view.state.values.name.select_input_action.selected_option.value;
@@ -59,9 +59,14 @@ app.view('submit', async ({ ack, body, context, client, view }) => {
     console.error(error);
     app.error(error);
   }
-});
+};
 
-module.exports.handler = async (event, context, callback) => {
+const lambdaHandler = async (event, context, callback) => {
   const handler = await awsLambdaReceiver.start();
   return handler(event, context, callback);
 };
+
+app.shortcut('up', handleShortcut);
+app.view('submit', handleViewSubmit);
+
+module.exports.handler = lambdaHandler;
