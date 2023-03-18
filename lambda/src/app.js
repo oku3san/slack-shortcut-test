@@ -1,6 +1,6 @@
 const { App, AwsLambdaReceiver, LogLevel } = require('@slack/bolt');
 
-// Initialize your custom receiver
+// initialize your custom receiver
 const awsLambdaReceiver = new AwsLambdaReceiver({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
 });
@@ -9,7 +9,7 @@ const awsLambdaReceiver = new AwsLambdaReceiver({
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   receiver: awsLambdaReceiver,
-  logLevel: LogLevel.DEBUG,
+  // logLevel: LogLevel.DEBUG,
 });
 
 const options = [
@@ -29,7 +29,7 @@ const options = [
   },
 ];
 
-// セレクトボックスを表示する
+// セレクトボックスを表示する view object
 const view = {
   type: "modal",
   callback_id: "submit",
@@ -48,6 +48,7 @@ const view = {
   blocks: [
     {
       type: "input",
+      block_id: 'name',
       element: {
         type: "static_select",
         placeholder: {
@@ -55,7 +56,7 @@ const view = {
           text: "起動対象を選択してください",
         },
         options: options,
-        action_id: "button_click",
+        action_id: "select_input_action",
       },
       label: {
         type: "plain_text",
@@ -65,36 +66,36 @@ const view = {
   ]
 }
 
+// This will show the view in response to the up shortcut
 app.shortcut('up', async ({ shortcut, ack, context }) => {
   await ack();
 
   try {
-    const result = await app.client.views.open({
+    await app.client.views.open({
       token: context.botToken,
       trigger_id: shortcut.trigger_id,
       view: view,
 
     });
-    console.log(result);
   } catch (e) {
     console.log(e);
     app.error(e);
   }
 });
 
-app.view('submit', async ({ ack,view, body, context }) => {
+// This will handle the submission of the view with the select input
+app.view('submit', async ({ ack, body, view }) => {
   await ack();
-
   try {
     const values = view.state.values
-    console.log(JSON.stringify(values, null, 2));
+    const selectedValue = values.name.select_input_action.selected_option.value;
+    console.log(selectedValue);
   } catch (e) {
     console.log(e);
     app.error(e);
   }
 });
 
-// Listens to incoming messages that contain "goodbye"
 // Handle the Lambda function event
 module.exports.handler = async (event, context, callback) => {
   const handler = await awsLambdaReceiver.start();
