@@ -61,12 +61,10 @@ const handleViewSubmit = async ({ ack, body, context, client, view }) => {
   }
 };
 
-const lambdaHandler = async (event, context, callback) => {
-  const handler = await awsLambdaReceiver.start();
-  return handler(event, context, callback);
-};
-
 app.shortcut('up', handleShortcut);
 app.view('submit', handleViewSubmit);
 
-module.exports.handler = lambdaHandler;
+module.exports.handler = async (event, context, callback) => {
+  const handler = await awsLambdaReceiver.start();
+  return handler(event, context, callback);
+};
