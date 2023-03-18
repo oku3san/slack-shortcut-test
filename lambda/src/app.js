@@ -12,7 +12,6 @@ const app = new App({
   logLevel: LogLevel.DEBUG,
 });
 
-
 const options = [
   {
     text: {
@@ -33,6 +32,7 @@ const options = [
 // セレクトボックスを表示する
 const view = {
   type: "modal",
+  callback_id: "submit",
   title: {
     type: "plain_text",
     text: "あげる",
@@ -73,6 +73,7 @@ app.shortcut('up', async ({ shortcut, ack, context }) => {
       token: context.botToken,
       trigger_id: shortcut.trigger_id,
       view: view,
+
     });
     console.log(result);
   } catch (e) {
@@ -81,12 +82,12 @@ app.shortcut('up', async ({ shortcut, ack, context }) => {
   }
 });
 
-app.action('button_click', async ({ ack, body, context }) => {
+app.view('submit', async ({ ack,view, body, context }) => {
   await ack();
 
   try {
-    const selectedOption = body.actions[0].selected_option;
-    console.log(selectedOption.value);
+    const values = view.state.values
+    console.log(JSON.stringify(values, null, 2));
   } catch (e) {
     console.log(e);
     app.error(e);
