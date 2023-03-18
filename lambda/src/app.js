@@ -83,16 +83,25 @@ app.shortcut('up', async ({ shortcut, ack, context }) => {
   }
 });
 
-// This will handle the submission of the view with the select input
-app.view('submit', async ({ ack, body, view }) => {
+app.view('submit', async ({ ack, body, context, client, view }) => {
+  // View submission callback
+
+  // Acknowledge submission
   await ack();
+
+  // Send a message using `app.say()` to the user who triggered the shortcut
   try {
     const values = view.state.values
     const selectedValue = values.name.select_input_action.selected_option.value;
-    console.log(selectedValue);
+    const result = await client.conversations.open({
+      users: body.user.id
+    });
+    await client.chat.postMessage({
+      text: selectedValue,
+      channel: result.channel.id
+    });
   } catch (e) {
     console.log(e);
-    app.error(e);
   }
 });
 
