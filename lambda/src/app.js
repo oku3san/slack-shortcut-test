@@ -1,112 +1,67 @@
-const { App, AwsLambdaReceiver, LogLevel } = require('@slack/bolt');
+const { App, AwsLambdaReceiver } = require('@slack/bolt');
 
-// initialize your custom receiver
 const awsLambdaReceiver = new AwsLambdaReceiver({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
 });
 
-// Initializes your app with your bot token and the AWS Lambda ready receiver
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   receiver: awsLambdaReceiver,
-  // logLevel: LogLevel.DEBUG,
 });
 
 const options = [
-  {
-    text: {
-      type: 'plain_text',
-      text: 'オプション1',
-    },
-    value: 'value1',
-  },
-  {
-    text: {
-      type: 'plain_text',
-      text: 'オプション2',
-    },
-    value: 'value2',
-  },
+  { text: { type: 'plain_text', text: 'オプション1' }, value: 'value1' },
+  { text: { type: 'plain_text', text: 'オプション2' }, value: 'value2' },
 ];
 
-// セレクトボックスを表示する view object
 const view = {
-  type: "modal",
-  callback_id: "submit",
-  title: {
-    type: "plain_text",
-    text: "あげる",
-  },
-  submit: {
-    type: "plain_text",
-    text: "Submit",
-  },
-  close: {
-    type: "plain_text",
-    text: "Cancel",
-  },
+  type: 'modal',
+  callback_id: 'submit',
+  title: { type: 'plain_text', text: 'あげる' },
+  submit: { type: 'plain_text', text: 'Submit' },
+  close: { type: 'plain_text', text: 'Cancel' },
   blocks: [
     {
-      type: "input",
+      type: 'input',
       block_id: 'name',
       element: {
-        type: "static_select",
-        placeholder: {
-          type: "plain_text",
-          text: "起動対象を選択してください",
-        },
-        options: options,
-        action_id: "select_input_action",
+        type: 'static_select',
+        placeholder: { type: 'plain_text', text: '起動対象を選択してください' },
+        options,
+        action_id: 'select_input_action',
       },
-      label: {
-        type: "plain_text",
-        text: "起動対象を選択してください",
-      }
-    }
-  ]
-}
+      label: { type: 'plain_text', text: '起動対象を選択してください' },
+    },
+  ],
+};
 
-// This will show the view in response to the up shortcut
-app.shortcut('up', async ({ shortcut, ack, context }) => {
-  await ack();
-
+app.shortcut('up', async ({ shortcut, ack, context, client }) => {
   try {
-    await app.client.views.open({
+    await ack();
+    await client.views.open({
       token: context.botToken,
       trigger_id: shortcut.trigger_id,
-      view: view,
-
+      view,
     });
-  } catch (e) {
-    console.log(e);
-    app.error(e);
+  } catch (error) {
+    console.error(error);
+    app.error(error);
   }
 });
 
 app.view('submit', async ({ ack, body, context, client, view }) => {
-  // View submission callback
-
-  // Acknowledge submission
-  await ack();
-
-  // Send a message using `app.say()` to the user who triggered the shortcut
   try {
-    const values = view.state.values
-    const selectedValue = values.name.select_input_action.selected_option.value;
-    const result = await client.conversations.open({
-      users: body.user.id
-    });
-    await client.chat.postMessage({
-      text: selectedValue,
-      channel: result.channel.id
-    });
-  } catch (e) {
-    console.log(e);
+    await ack();
+    const value = view.state.values.name.select_input_action.selected_option.value;
+    const result = await client.conversations.open({ users: body.user.id });
+    await client.chat.postMessage({ channel: result.channel.id, text: value });
+  } catch (error) {
+    console.error(error);
+    app.error(error);
   }
 });
 
-// Handle the Lambda function event
 module.exports.handler = async (event, context, callback) => {
   const handler = await awsLambdaReceiver.start();
   return handler(event, context, callback);
-}
+};
