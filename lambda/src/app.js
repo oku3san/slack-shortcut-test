@@ -1,4 +1,4 @@
-const { App, AwsLambdaReceiver } = require('@slack/bolt');
+const { App, AwsLambdaReceiver,LogLevel } = require('@slack/bolt');
 
 const awsLambdaReceiver = new AwsLambdaReceiver({
   signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -7,7 +7,10 @@ const awsLambdaReceiver = new AwsLambdaReceiver({
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
   receiver: awsLambdaReceiver,
+  logLevel: LogLevel.DEBUG
 });
+
+
 
 const options = [
   { text: { type: 'plain_text', text: 'オプション1' }, value: 'value1' },
