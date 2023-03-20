@@ -13,8 +13,8 @@ const app = new App({
 
 
 const options = [
-  { text: { type: 'plain_text', text: 'オプション1' }, value: 'value1' },
-  { text: { type: 'plain_text', text: 'オプション2' }, value: 'value2' },
+  { text: { type: 'plain_text', text: 'オプション' }, value: 'value1' },
+  { text: { type: 'plain_text', text: 'オプション' }, value: 'value2' },
 ];
 
 const view = {
